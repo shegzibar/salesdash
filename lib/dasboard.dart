@@ -57,7 +57,6 @@ class _SalesDashboardState extends State<SalesDashboard> {
     final data = customers.map((e) => e.toJson()).toList();
     prefs.setString('customers', jsonEncode(data));
   }
-
   void _checkForNotifications() {
     final now = tz.TZDateTime.now(tz.getLocation('America/New_York'));
     for (var customer in customers) {
@@ -75,6 +74,7 @@ class _SalesDashboardState extends State<SalesDashboard> {
       }
     }
   }
+
 
   @override
   void dispose() {
@@ -198,13 +198,17 @@ class _SalesDashboardState extends State<SalesDashboard> {
       }
     }
     return null;
-  }
+  }Widget _buildNotificationBox(Customer customer) {
+    // Convert callbackTime to Eastern Time Zone
+    final callbackTime = tz.TZDateTime.fromMillisecondsSinceEpoch(
+      tz.getLocation('America/New_York'),
+      customer.callbackTime,
+    );
 
-  Widget _buildNotificationBox(Customer customer) {
     return Center(
       child: Container(
         width: 400,
-        height: 200,
+        height: 250,
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.blueGrey,
@@ -215,33 +219,66 @@ class _SalesDashboardState extends State<SalesDashboard> {
           children: [
             Text(
               'Callback Now!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             SizedBox(height: 8),
             Text(
-              '${customer.name}\n${customer.phone}\n${customer.email}',
+              'Customer Info:\n${customer.name}\n${customer.phone}\n${customer.email}\n\nCallback Time (Eastern): $callbackTime',
               textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white),
             ),
             SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Copy customer info to clipboard
-                Clipboard.setData(ClipboardData(
-                    text:
-                    '${customer.name}\n${customer.phone}\n${customer.email}'));
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Copy customer info to clipboard
+                    Clipboard.setData(
+                      ClipboardData(
+                        text:
+                        '${customer.name}\n${customer.phone}\n${customer.email}\nCallback Time (Eastern): $callbackTime',
+                      ),
+                    );
 
-                // Remove the notification
-                setState(() {
-                  currentNotification = null;
-                });
-              },
-              child: Text('Copy Info'),
+                    // Remove the notification
+                    setState(() {
+                      currentNotification = null;
+                    });
+                  },
+                  child: Text('Copy Info'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                  onPressed: () {
+                    // Copy customer info to clipboard
+                    Clipboard.setData(
+                      ClipboardData(
+                        text:
+                        '${customer.name}\n${customer.phone}\n${customer.email}\nCallback Time (Eastern): $callbackTime',
+                      ),
+                    );
+
+                    // Delete the customer
+                    _deleteCustomer(customer.id);
+
+                    // Remove the notification
+                    setState(() {
+                      currentNotification = null;
+                    });
+                  },
+                  child: Text('Copy Info and Delete CX'),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
   }
+
 
 
   @override
